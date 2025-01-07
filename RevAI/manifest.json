@@ -6,7 +6,7 @@
     "icons": {
       "16":"icons/16.png",
       "32":"icons/32.png",
-      "48":"icons/logo.png",
+      "48":"icons/48.png",
       "128":"icons/128.png"
     },
     "action": {
@@ -23,7 +23,7 @@
   ],
   "web_accessible_resources": [
   {
-    "resources": ["html/*", "html/images/logo.png", "html/images/the_cross.png", "html_scripts/main_script.js", "html_scripts/popup_script.js", "html/images/*.png", "html_scripts/main_script.js", "*"],
+    "resources": ["images/*.png"],
     "matches": ["<all_urls>"]
   }
   ],

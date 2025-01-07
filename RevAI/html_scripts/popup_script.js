@@ -1,35 +1,4 @@
-console.log("Скрипт успешно подключён!1223");
-async function initializeButton() {
-    const button = document.getElementById('toggleButton');
-    const switchValue = await loadParameter();
-    if (switchValue) {
-        button.textContent = "on";
-    } else {
-        button.textContent = "off";
-    }
-}
-
-// Асинхронная функция для загрузки параметров
-async function loadParameter() {
-    try {
-        const result = await chrome.storage.sync.get("switch");
-        console.log("Загружен switch:", result.switch);
-        return result.switch ?? true;
-    } catch (error) {
-        console.error("Ошибка получения switch:", error);
-        return true;
-    }
-    }
-    
-// Асинхронная функция для сохранения параметров
-async function saveParameter(value) {
-try {
-    await chrome.storage.sync.set({ switch: value });
-    console.log("Сохранен switch:", value);
-} catch (error) {
-    console.error("Ошибка сохранения switch:", error);
-}
-}
+import { loadParameter, saveParameter } from './utils.js';
 
 window.onload = async function() {
     await initializeButton();
@@ -37,7 +6,7 @@ window.onload = async function() {
     document.getElementById('toggleButton').addEventListener('click', async function() { 
         const button = this;
 
-        // Prevent multiple clicks while loading
+        // Предотвращение множественных щелчков при загрузке
         if (button.classList.contains('loading')) {
             return;
         }
@@ -63,3 +32,13 @@ window.onload = async function() {
         }, 3000);
         });
     }
+
+async function initializeButton() {
+    const button = document.getElementById('toggleButton');
+    const switchValue = await loadParameter();
+    if (switchValue) {
+        button.textContent = "on";
+    } else {
+        button.textContent = "off";
+    }
+}
