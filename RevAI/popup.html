@@ -2,73 +2,97 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>expansion</title>
+    <title>Expansion</title>
     <style>
+        /* Основной стиль для тела документа */
         body {
-            margin: 0;
+            margin: 0; /* Убирает отступы по умолчанию */
             width: 150px; /* Ширина окна */
             height: 150px; /* Высота окна */
-            background-color: rgb(230, 255, 247);
-            overflow: hidden;
+            background-color: rgb(230, 255, 247); /* Цвет фона */
+            overflow: hidden; /* Убирает полосы прокрутки */
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Тень для окна */
         }
+
+        /* Стиль для контейнера верхнего окна */
         .the_upper_window {
-            width: 100%;
-            height: 100%;
-            box-shadow: -10px 10px 10px -4px rgba(34, 60, 80, 0.2);
-            position: relative;
+            width: 100%; /* Растягивается на всю ширину окна */
+            height: 100%; /* Растягивается на всю высоту окна */
+            box-shadow: -10px 10px 10px -4px rgba(34, 60, 80, 0.2); /* Дополнительная тень */
+            position: relative; /* Используется для позиционирования дочерних элементов */
         }
+
+        /* Кнопка включения/выключения */
         .on_off {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            background-image: linear-gradient(45deg, #006363, #63f8f8);
-            border: none;
-            box-shadow: -10px 10px 10px -4px rgba(34, 60, 80, 0.2);
-            padding: 0;
-            text-align: center;
-            font-size: 1.1rem;
-            color: #ffffff;
-            position: relative;
-            transition: opacity 0.3s ease; /* Плавный переход opacity */
+            width: 100px; /* Ширина кнопки */
+            height: 100px; /* Высота кнопки */
+            border-radius: 50%; /* Делает кнопку круглой */
+            position: absolute; /* Позиционирование внутри контейнера */
+            top: 25px; /* Отступ сверху */
+            left: 25px; /* Отступ слева */
+            background-image: linear-gradient(45deg, #006363, #63f8f8); /* Градиентный фон */
+            border: none; /* Убирает границу кнопки */
+            box-shadow: -10px 10px 10px -4px rgba(34, 60, 80, 0.2); /* Тень */
+            padding: 0; /* Убирает внутренние отступы */
+            text-align: center; /* Центрирует текст */
+            font-size: 1.1rem; /* Размер шрифта текста кнопки */
+            color: #ffffff; /* Белый цвет текста */
+            transition: opacity 0.3s ease; /* Плавный переход для прозрачности */
         }
+
+        /* Эффект при наведении на кнопку */
         .on_off:hover {
-            opacity: 90%;
-            text-shadow: 0px 0px 3px rgb(255, 255, 255);
-            box-shadow: -10px 10px 10px -4px rgba(34, 60, 80, 0.2)
+            opacity: 90%; /* Слегка уменьшает прозрачность */
+            text-shadow: 0px 0px 3px rgb(255, 255, 255); /* Добавляет свечение текста */
         }
+
+        /* Эффект при нажатии на кнопку */
         .on_off:active {
-            -webkit-box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset;
-            -moz-box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset;
-            box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset;
-            text-shadow: -0.2px 0.2px 3px black;
+            box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset; /* Внутренняя тень */
+            text-shadow: -0.2px 0.2px 3px black; /* Тень текста */
         }
+
+        /* Анимация загрузки */
         .loading {
             position: absolute;
             width: 100px;
             height: 100px;
-            background: linear-gradient(45deg #63f8f8 0%, #006363 100%);
-            animation: spin 3s ease-in-out infinite;
+            background: linear-gradient(45deg, #63f8f8 0%, #006363 100%); /* Градиентный фон */
+            animation: spin 3s ease-in-out infinite; /* Анимация вращения */
         }
+
+        /* Ключевые кадры для анимации вращения */
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); } /* Начальное положение */
+            100% { transform: rotate(360deg); } /* Полный оборот */
         }
+
+        /* Пользовательский шрифт */
         @font-face {
-        font-family: 'Haarlem Deco DEMO'; 
-        src: local('Haarlem Deco DEMO'),
-            url(HaarlemDecoDEMO.ttf); 
+            font-family: 'Haarlem Deco DEMO'; 
+            src: local('Haarlem Deco DEMO'),
+                 url(HaarlemDecoDEMO.ttf); /* Путь к шрифту */
         }
     </style>
   </head>
   <body>
+    <!-- Контейнер верхнего окна -->
     <div class="the_upper_window">
+        <!-- Кнопка включения/выключения -->
         <button class="on_off" id="toggleButton" type="button">on</button>
-    <div class="RevAi" style="position: absolute; left: 5px; top: 5px; font-family: Haarlem Deco Demo; font-size: 15px;">REVAI</div>
+        
+        <!-- Надпись в верхнем окне -->
+        <div class="RevAi" style="
+            position: absolute; 
+            left: 5px; 
+            top: 5px; 
+            font-family: 'Haarlem Deco DEMO'; 
+            font-size: 15px;">
+            REVAI
+        </div>
     </div>
+
+    <!-- Подключение JavaScript -->
     <script src="html_scripts/popup_script.js"></script>
   </body>
 </html>
