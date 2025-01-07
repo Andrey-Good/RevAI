@@ -1,3 +1,6 @@
+/**
+ * Загружает параметр "switch" из Chrome Storage
+ */
 export async function loadParameter() {
     try {
         const result = await chrome.storage.sync.get("switch");

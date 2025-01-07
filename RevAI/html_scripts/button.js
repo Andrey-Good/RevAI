@@ -1,13 +1,15 @@
 (async function () {
-    const a = await loadParameter();
+    // Загружаем параметр для проверки активации расширения
+    const switch_parameter = await loadParameter();
 
-    html = `
+    const html = `
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <title>expansion</title>
     <style>
+        /* Стили для кнопки в правом нижнем углу */
         .buttom_right {
             width: 60px;
             height: 60px;
@@ -20,6 +22,7 @@
             right: 20px;
             bottom: 20px;
         }
+        /* Маска для кнопки */
         .mask {
             width: 60px;
             height: 60px;
@@ -27,6 +30,7 @@
             bottom: 20px;
             border-radius: 14.65px;
         }
+        /* Стили при наведении и нажатии на кнопку */
         .buttom_right:hover {
             opacity: 90%;
         }
@@ -38,6 +42,7 @@
             -moz-box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset;
             box-shadow: -10px 7px 12px -6px rgba(34, 60, 80, 0.2) inset;
         }
+        /* Стили главного контейнера */
         .main {
             width: 250px;
             height: 400px;
@@ -49,6 +54,7 @@
             right: 100px;
             bottom: 20px;
         }
+        /* Кнопка закрытия окна */
         .the_cross {
             width: 8px; 
             height: 8px;
@@ -65,6 +71,7 @@
         .the_cross:active {
             opacity: 0%;
         }
+        /* Блок для краткого пересказа */
         .main_0 {
             width: 210px;
             height: 100px;
@@ -140,7 +147,7 @@
 </html>
 `;
 
-    if (a) {
+    if (switch_parameter) {
         try {
             const buttonContainer = document.createElement('div');
             buttonContainer.innerHTML = html;
@@ -170,7 +177,7 @@
             const pasre = await fetchReviews(slug);
             console.log("pasre:", pasre);
             
-            json_for_send = {
+            const json_for_send = {
                 'language': "russian",
                 'length_of_text': "200",
                 'reviews' : pasre,
@@ -182,7 +189,6 @@
                 const jsonText = response.message;
                 console.log("Ответ от сервера jsonText:", jsonText);
                 const dubbleText = JSON.parse(jsonText);
-                //dubbleText = 1;
 
                 if (dubbleText) {
                     summary1.textContent = dubbleText.short_message || "Ошибка выполнения";
@@ -204,7 +210,7 @@
 
 
 /**
- *  Функция для изменения размеров кнопки в зависимости от размера окна
+ *  Изменение размеров кнопки в зависимости от размера окна
  */
 function adjustButtonSize(buttonContainer) {
     const windowWidth = window.innerWidth;
@@ -223,6 +229,9 @@ function adjustButtonSize(buttonContainer) {
     buttonContainer.style.height = buttonSize; // Высота кнопки
 }
 
+/**
+ * Загружает параметр "switch" из Chrome Storage
+ */
 async function loadParameter() {
     try {
         const result = await chrome.storage.sync.get("switch");
