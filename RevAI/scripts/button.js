@@ -1,8 +1,7 @@
 (async function () {
-  const a = await loadParameter();
-//
+    const a = await loadParameter();
 
-  html = `
+    html = `
 <!doctype html>
 <html>
   <head>
@@ -141,65 +140,65 @@
 </html>
 `;
 
-if (a) {
-    try {
-        const buttonContainer = document.createElement('div');
-        buttonContainer.innerHTML = html;
-        buttonContainer.style.position = 'fixed';
-        buttonContainer.style.bottom = '20px';
-        buttonContainer.style.right = '20px';
-        buttonContainer.style.zIndex = '9999';
+    if (a) {
+        try {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.innerHTML = html;
+            buttonContainer.style.position = 'fixed';
+            buttonContainer.style.bottom = '20px';
+            buttonContainer.style.right = '20px';
+            buttonContainer.style.zIndex = '9999';
 
-        // Контролируем размеры кнопки
-        adjustButtonSize(buttonContainer);
-        window.addEventListener('resize', () => adjustButtonSize(buttonContainer));
+            // Контролируем размеры кнопки
+            adjustButtonSize(buttonContainer);
+            window.addEventListener('resize', () => adjustButtonSize(buttonContainer));
 
-        // Добавляем контейнер в тело документа
-        document.body.appendChild(buttonContainer);
-    } catch (err) {
-        console.error('Ошибка загрузки кнопки:', err);
-    }
-
-    const button = document.getElementById("button351221");
-    const summary1 = document.getElementById("summary1351");
-    const summary2 = document.getElementById("summary2351");
-
-    button.addEventListener("click", async () => {
-        const url_adress =  window.location.href;
-        const parts = url_adress.split('/');
-        const slug = parts[parts.length - 2];
-        const pasre = await fetchReviews(slug);
-        console.log("pasre:", pasre);
-        
-        json_for_send = {
-            'language': "russian",
-            'length_of_text': "200",
-            'reviews' : pasre,
-            'slug': slug
+            // Добавляем контейнер в тело документа
+            document.body.appendChild(buttonContainer);
+        } catch (err) {
+            console.error('Ошибка загрузки кнопки:', err);
         }
 
-        try {
-            const response = await sendDataToServer(json_for_send);
-            const jsonText = response.message;
-            console.log("Ответ от сервера jsonText:", jsonText);
-            const dubbleText = JSON.parse(jsonText);
-            //dubbleText = 1;
+        const button = document.getElementById("button351221");
+        const summary1 = document.getElementById("summary1351");
+        const summary2 = document.getElementById("summary2351");
 
-            if (dubbleText) {
-                summary1.textContent = dubbleText.short_message || "Ошибка выполнения";
-                summary2.textContent = dubbleText.message || "Ошибка выполнения";
-            } else {
+        button.addEventListener("click", async () => {
+            const url_adress =  window.location.href;
+            const parts = url_adress.split('/');
+            const slug = parts[parts.length - 2];
+            const pasre = await fetchReviews(slug);
+            console.log("pasre:", pasre);
+            
+            json_for_send = {
+                'language': "russian",
+                'length_of_text': "200",
+                'reviews' : pasre,
+                'slug': slug
+            }
+
+            try {
+                const response = await sendDataToServer(json_for_send);
+                const jsonText = response.message;
+                console.log("Ответ от сервера jsonText:", jsonText);
+                const dubbleText = JSON.parse(jsonText);
+                //dubbleText = 1;
+
+                if (dubbleText) {
+                    summary1.textContent = dubbleText.short_message || "Ошибка выполнения";
+                    summary2.textContent = dubbleText.message || "Ошибка выполнения";
+                } else {
+                    summary1.textContent = "Ошибка выполнения";
+                    summary2.textContent = "Ошибка выполнения";
+                    console.error("Пустой или некорректный ответ от сервера");
+                }
+            } catch (error) {
                 summary1.textContent = "Ошибка выполнения";
                 summary2.textContent = "Ошибка выполнения";
-                console.error("Пустой или некорректный ответ от сервера");
+                console.error("Ошибка обработки клика:", error);
             }
-        } catch (error) {
-            summary1.textContent = "Ошибка выполнения";
-            summary2.textContent = "Ошибка выполнения";
-            console.error("Ошибка обработки клика:", error);
-        }
-    });
-}
+        });
+    }
 })();
 
 
@@ -208,20 +207,20 @@ if (a) {
  *  Функция для изменения размеров кнопки в зависимости от размера окна
  */
 function adjustButtonSize(buttonContainer) {
-const windowWidth = window.innerWidth;
+    const windowWidth = window.innerWidth;
 
-let buttonSize;
-if (windowWidth > 1200) {
-    buttonSize = '128px';
-} else if (windowWidth > 800) {
-    buttonSize = '64px';
-} else {
-    buttonSize = '16px';
-}
+    let buttonSize;
+    if (windowWidth > 1200) {
+        buttonSize = '128px';
+    } else if (windowWidth > 800) {
+        buttonSize = '64px';
+    } else {
+        buttonSize = '16px';
+    }
 
-buttonContainer.style.fontSize = buttonSize; // Размер текста
-buttonContainer.style.width = buttonSize; // Ширина кнопки
-buttonContainer.style.height = buttonSize; // Высота кнопки
+    buttonContainer.style.fontSize = buttonSize; // Размер текста
+    buttonContainer.style.width = buttonSize; // Ширина кнопки
+    buttonContainer.style.height = buttonSize; // Высота кнопки
 }
 
 async function loadParameter() {
