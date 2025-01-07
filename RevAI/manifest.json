@@ -14,7 +14,7 @@
     },
     "content_scripts": [
     {
-      "js": ["scripts/button.js"],
+      "js": ["html_scripts/button.js"],
       "matches": [
         "https://www.ozon.ru/product/*"
       ],
