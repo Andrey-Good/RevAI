@@ -172,9 +172,7 @@
 
         button.addEventListener("click", async () => {
             const url_adress =  window.location.href;
-            const parts = url_adress.split('/');
-            const slug = parts[parts.length - 2];
-            const pasre = await fetchReviews(slug);
+            const pasre = await fetchReviews(url_adress);
             console.log("pasre:", pasre);
             
             const json_for_send = {
@@ -243,29 +241,65 @@ async function loadParameter() {
     }
 }
 
-async function fetchReviews(productName) {
+async function fetchReviews(url_adress) {
     const MAX_CHAR_COUNT = 3000;
-    const BASE_URL = `https://www.ozon.ru/product/${productName}/reviews/`;
-    //const CLASS_NAME = 'pv9_30 w6p_30';
-    const CLASS_NAME_END = '_30'
+    const domen = url_adress.split('/')[2];
+    
+    if (domen == 'www.ozon.ru') {
+        return await parseOzon(url_adress, MAX_CHAR_COUNT);
+    } else if (domen == 'market.yandex.ru') {
+        return await parseYandex_market(url_adress, MAX_CHAR_COUNT);
+    }
+}
+
+async function parseYandex_market(url_adress, MAX_CHAR_COUNT = 3000) {
+    // Принцип работы:
+    // На Yandex market первые 10 отзывов загружаются вместе с html. А остальные подружаются POST запросами. Так что организуем работу парсинга в соответствии с этим.
+
+    const slugs = url_adress.split('/')[3] + '/' + url_adress.split('/')[4];  
+    let reviews = [];
+    let totalCharCount = 0;
+
+    // Берем элементы с отзовами с загруженной страницы
+    const firstUseURL = `https://market.yandex.ru/${slugs}/reviews`
+    const selector = `script[type="application/ld+json"]`
+    const scriptElements = parseSelector(firstUseURL, selector)
+
+    // Добавляем отзывы в массив из элементов
+    scriptElements.forEach(scriptElement => {
+        try {
+          const jsonData = JSON.parse(scriptElement.textContent);
+          reviewBody = jsonData.reviewBody.trim()
+          totalCharCount += reviewBody.length;
+          reviews.push(reviewBody);
+        } catch (error) {
+          console.error("Ошибка при парсинге JSON:", error);
+        }
+      });
+
+    
+}
+
+async function parseOzon(url_adress, MAX_CHAR_COUNT = 3000) {
+    //Принцип работы:
+    // Ozon нередко меняет имя класса, что вынуждает идти на ухищрения. Тут берустя классы которые заканчиваются на _30 (среди которых преимущественно и содержатся отзывы) и после фильтруются, чтобы отсались преимущественно отзывы.
+    // Подобный подход не так эффективен и надежен, ведь если имя класса смениться координально все сломается. Кроме того подобное не гарантирует что изымутся исключительно отзывы. Возможны посторонние элементы. Но альтернатив я не придумал.
+
+    const slug = url_adress.split('/')[4];
     let page = 1;
     let reviews = [];
     let totalCharCount = 0;
 
-    //Перебираем все страницы с отзывами о товаре
+    //Перебираем все страницы с отзывами о товаре и добавляем найденные в массив.
     while (true) {
         try {
-            const url = `${BASE_URL}?page=${page}&page_key=CL7wxNgGEgwI8MiMugYQyM2qxQEYBQ&sort=published_at_desc`;
-            const response = await fetch(url);
-            if (!response.ok) break;
-            
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            const url = `https://www.ozon.ru/product/${slug}/reviews?page=${page}&page_key=CL7wxNgGEgwI8MiMugYQyM2qxQEYBQ&sort=published_at_desc`;
+            const selector = `[class$="_30"]`
+            //const selector = 'pv9_30 w6p_30';
+            const all_elements = parseSelector(url, selector);
+            if (all_elements === null) break;
 
-            // Находим элементы с отзывами
-            //const elements = doc.querySelectorAll(`.${CLASS_NAME.replace(/ /g, '.')}`);
-            const all_elements = doc.querySelectorAll(`[class$="${CLASS_NAME_END}"]`);
+            // Фильтруем элементы с отзывами и перерабатываем в текст
             //console.log("all_elements:", all_elements);
             const elements = Array.from(all_elements).filter(element => {
                 const classString = element.className;
@@ -278,7 +312,7 @@ async function fetchReviews(productName) {
                             element.innerText.trim().length > 10 &&
                             element.innerText[2] != "\n" &&
                             !element.innerText.includes("Вам помог этот") &&
-                            !element.innerText.includes("В начало");
+                            !element.innerText.includes("В начало");            //Фильтруем посторонние элементы
                 } else {
                     return false;
                 }
@@ -287,7 +321,7 @@ async function fetchReviews(productName) {
             if (elements.length === 0) break; // Прекращаем, если отзывов на странице нет
 
             // Добавляем отзывы в массив
-            for (let element of elements) {
+            for (const element of elements) {
                 const review = element.textContent.trim();
                 if (review) {
                     reviews.push(review);
@@ -301,13 +335,13 @@ async function fetchReviews(productName) {
 
             page++;
         } catch (error) {
-            console.error('Ошибка при загрузке отзывов:', error);
+            console.error('Ошибка при парсинге:', error);
             break;
         }
     }
 
     return reviews;
-}
+} 
 
 async function sendDataToServer(data) {
     try {
@@ -333,3 +367,122 @@ async function sendDataToServer(data) {
     }
 }
 
+
+async function getProductReviewTexts(productSlug, page) {
+    const url = 'https://market.yandex.ru/api/render-lazy?w=%40card%2FReviewsLayout';
+  
+    // *** Необходимо подбирать актуальный cookie ***
+    const cookie = '';
+  
+    const headers = {
+      ':authority': 'market.yandex.ru',
+      ':method': 'POST',
+      ':path': '/api/render-lazy?w=%40card%2FReviewsLayout',
+      ':scheme': 'https',
+      'accept': '*/*',
+      'accept-encoding': 'gzip, deflate, br, zstd',
+      'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+      'content-type': 'application/json',
+      'cookie': cookie,
+      'origin': 'https://market.yandex.ru',
+      'priority': 'u=1, i',
+      'referer': `https://market.yandex.ru/product--${productSlug}/reviews`,
+      'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      // sk - скорее всего постоянный, но если будут проблемы, стоит проверить актуальность
+      'sk': 's4ab4ae8a1a5346b6785ea5686f3d3ee5',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      // x-market-app-version - может меняться со временем
+      'x-market-app-version': '2024.12.22.0.t2775028156',
+      'x-market-core-service': 'default',
+      // x-market-first-req-id - генерируется при загрузке страницы, нужно получать актуальный
+      'x-market-first-req-id': '',
+      // x-market-front-glue - вероятно тоже меняется
+      'x-market-front-glue': '',
+      'x-market-page-id': 'market:product-reviews',
+    };
+  
+    const requestBody = {
+      "widgets": [{
+        "lazyId": "cardReviewsLayout46", // Возможно, это значение динамическое
+        "widgetName": "@card/ReviewsLayout",
+        "options": {
+          "resolverParams": {},
+          "widgetName": "@card/ReviewsLayout",
+          "id": "ReviewsLayoutRenderer",
+          "slotOptions": { "dynamic": true },
+          "className": "",
+          "needToProvideData": false,
+          "wrapperProps": {},
+          "layoutOptions": {
+            "entityWrapperProps": { "paddings": { "top": "5", "bottom": "5" } },
+            "loaderWrapperProps": { "paddings": { "top": "5", "bottom": "5" } }
+          },
+          "ignoreRemixGrid": false,
+          "forceCountInRow": false,
+          "isChefRemixExp": false,
+          "extraProps": {
+            "params": {
+              "customConfigName": "all_product_reviews_web_next_page",
+              "reviewPage": page.toString()
+            }
+          },
+          "widgetSource": "default"
+        },
+        "slotOptions": { "dynamic": true }
+      }],
+      // cspNonce - может быть динамическим
+      "cspNonce": "",
+      "path": `/product--${productSlug}/reviews`,
+      "widgetsSource": "default",
+      "experimental": {}
+    };
+  
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+  
+      if (!response.ok) {
+        return null;
+      }
+  
+      const data = await response.json();
+      const reviewTexts = data.payload.markup.widgets[0].props.reviews.map(review => review.text);
+      return reviewTexts;
+  
+    } catch (error) {
+      console.error("Could not fetch product reviews:", error);
+      return [];
+    }
+  }
+
+
+  /**
+ * Принимает url и серектор и возвращает все спарсиные элементы
+ */
+async function parseSelector(url, selector) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            return null;
+        };
+        
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Находим элементы с отзывами
+        return doc.querySelectorAll(selector);
+    } catch (error) {
+        console.error('Ошибка при парсинге:', error);
+    }
+}
+
+async 
