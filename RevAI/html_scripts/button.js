@@ -179,7 +179,7 @@
                 'language': "russian",
                 'length_of_text': "200",
                 'reviews' : pasre,
-                'slug': slug
+                'slug': getSlug(url_adress)
             }
 
             try {
@@ -256,7 +256,7 @@ async function parseYandex_market(url_adress, MAX_CHAR_COUNT = 3000) {
     // Принцип работы:
     // На Yandex market первые 10 отзывов загружаются вместе с html. А остальные подружаются POST запросами. Так что организуем работу парсинга в соответствии с этим.
 
-    const slugs = url_adress.split('/')[3] + '/' + url_adress.split('/')[4];  
+    const slugs = getSlug(url_adress);
     let reviews = [];
     let totalCharCount = 0;
 
@@ -285,7 +285,10 @@ async function parseOzon(url_adress, MAX_CHAR_COUNT = 3000) {
     // Ozon нередко меняет имя класса, что вынуждает идти на ухищрения. Тут берустя классы которые заканчиваются на _30 (среди которых преимущественно и содержатся отзывы) и после фильтруются, чтобы отсались преимущественно отзывы.
     // Подобный подход не так эффективен и надежен, ведь если имя класса смениться координально все сломается. Кроме того подобное не гарантирует что изымутся исключительно отзывы. Возможны посторонние элементы. Но альтернатив я не придумал.
 
-    const slug = url_adress.split('/')[4];
+    //const selector = 'pv9_30 w6p_30';
+    const CLASS_NAME_END = "_30";
+    const selector = `[class$="_30"]`
+    const slug = getSlug(url_adress);
     let page = 1;
     let reviews = [];
     let totalCharCount = 0;
@@ -294,15 +297,14 @@ async function parseOzon(url_adress, MAX_CHAR_COUNT = 3000) {
     while (true) {
         try {
             const url = `https://www.ozon.ru/product/${slug}/reviews?page=${page}&page_key=CL7wxNgGEgwI8MiMugYQyM2qxQEYBQ&sort=published_at_desc`;
-            const selector = `[class$="_30"]`
-            //const selector = 'pv9_30 w6p_30';
-            const all_elements = parseSelector(url, selector);
+            const all_elements = await parseSelector(url, selector);
             if (all_elements === null) break;
-
+            
             // Фильтруем элементы с отзывами и перерабатываем в текст
             //console.log("all_elements:", all_elements);
             const elements = Array.from(all_elements).filter(element => {
                 const classString = element.className;
+                console.log("element:", element, "classString:", classString);
                 //console.log("classString:", classString);
                 if (typeof classString === 'string') {
                     const classParts = classString.split(' ');
@@ -485,4 +487,12 @@ async function parseSelector(url, selector) {
     }
 }
 
-async 
+function getSlug(url_adress) {
+    const domen = url_adress.split('/')[2];
+
+    if (domen == 'www.ozon.ru') {
+        return url_adress.split('/')[4];
+    } else if (domen == 'market.yandex.ru') {
+        return  url_adress.split('/')[3] + '/' + url_adress.split('/')[4];  
+    }
+}
